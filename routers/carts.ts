@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import auth from "../middleware/auth";
 const router = express.Router();
 import cartModel from "../models/cart";
 
@@ -6,20 +7,25 @@ const { Cart, validate } = cartModel;
 
 const UserId = "603bb521117168406cdc713f";
 
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", auth, async (req: Request, res: Response) => {
   //const carts = await Cart.findOne().where('UserId').equals(req.params.id);
-  const carts = await Cart.findOne().where("UserId").equals(UserId);
+
+  const carts = await Cart.findOne()
+    .where("UserId")
+    .equals(req.body.user._id)
+    .select("-_id -UserId -__v");
+
   res.send(carts);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const inCart = await Cart.exists({
-    UserId: UserId,
+    UserId: req.body.user._id,
     "Products.productId": req.body._id,
   });
   if (inCart) {
     const product = {
-      UserId: UserId,
+      UserId: req.body.user._id,
       Products: [
         {
           productId: req.body._id,
@@ -32,14 +38,14 @@ router.post("/", async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
 
     let cart = await Cart.findOneAndUpdate(
-      { UserId: UserId, "Products.productId": req.body._id },
+      { UserId: req.body.user._id, "Products.productId": req.body._id },
       { $inc: { "Products.$.selectedItems": 1 } },
       { new: true }
     ).exec();
     res.send(cart);
   } else {
     const product = {
-      UserId: UserId,
+      UserId: req.body.user._id,
       Products: [
         {
           productId: req.body._id,
@@ -51,7 +57,7 @@ router.post("/", async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
 
     let cart = await Cart.findOneAndUpdate(
-      { UserId: UserId },
+      { UserId: req.body.user._id },
       { $push: { Products: product.Products } },
       { new: true }
     ).exec();
@@ -59,10 +65,10 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/", async (req, res) => {
+router.put("/", auth, async (req, res) => {
   if (req.body.selectedItems === 1) {
     const cart = await Cart.findOneAndUpdate(
-      { UserId: UserId },
+      { UserId: req.body.user._id },
       { $pull: { Products: { productId: req.body._id } } },
       { new: true }
     ).exec();
@@ -71,7 +77,7 @@ router.put("/", async (req, res) => {
     res.send(cart);
   } else {
     const cart = await Cart.findOneAndUpdate(
-      { UserId: UserId, "Products.productId": req.body._id },
+      { UserId: req.body.user._id, "Products.productId": req.body._id },
       { $inc: { "Products.$.selectedItems": -1 } },
       { new: true }
     ).exec();
@@ -81,9 +87,9 @@ router.put("/", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", auth, async (req, res) => {
   const cart = await Cart.findOneAndUpdate(
-    { UserId: UserId },
+    { UserId: req.body.user._id },
     { $pull: { Products: { productId: req.params.id } } },
     { new: true }
   ).exec();

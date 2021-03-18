@@ -12,7 +12,7 @@ router.get("/", async (req: Request, res: Response) => {
     .where("UserId")
     .equals(UserId)
     .select({ Cards: 1, _id: 0 })
-    .select("Cards.name Cards.number -_id");
+    .select("Cards.name Cards.number Cards.brand -_id");
 
   Payments ? res.send(Payments) : res.send({ Cards: [] });
 });

@@ -27,15 +27,8 @@ router.post("/", async (req: Request, res: Response) => {
   const { error } = validateAddress(req);
   if (error) return res.status(404).send(error.details[0].message);
 
-  // if address already exists
-  if (req.body._id != "") {
-    const address = await updateAddress(req);
-    if (!address) return res.status(404).send("Could not update!");
-    res.send(address);
-  } else {
-    const address = await addAddress(req);
-    res.send(address);
-  }
+  const address = await addAddress(req);
+  res.send(address);
 });
 
 router.put("/", async (req, res) => {
@@ -43,7 +36,13 @@ router.put("/", async (req, res) => {
   const { error } = validateAddress(req);
   if (error) return res.status(404).send(error.details[0].message);
 
-  const address = await setDefaultAddress(req.body._id);
+  const address = await updateAddress(req);
+  if (!address) return res.status(404).send("Could not update!");
+  res.send(address);
+});
+
+router.put("/:id", async (req, res) => {
+  const address = await setDefaultAddress(req.params.id);
   if (!address) return res.status(404).send("Could not update!");
   res.send(address);
 });

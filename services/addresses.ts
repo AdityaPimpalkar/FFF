@@ -23,6 +23,7 @@ export async function getSelectedAddress() {
   let query = { Addresses: { $elemMatch: { isdefault: true } } };
   let fields = {
     Addresses: 1,
+    _id: 0,
   };
   const result = await Address.findOne(filter, query).select(fields);
   return result;
