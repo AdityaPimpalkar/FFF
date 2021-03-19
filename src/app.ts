@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import "dotenv/config";
 
+import users from "../routers/users";
 import products from "../routers/products";
 import carts from "../routers/carts";
 import addresses from "../routers/addresses";
@@ -15,6 +16,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.use("/api/user", users);
 app.use("/api/product", products);
 app.use("/api/cart", carts);
 app.use("/api/address", addresses);

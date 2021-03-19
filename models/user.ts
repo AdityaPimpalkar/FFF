@@ -1,20 +1,13 @@
-import mongoose, { Model, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
 
+import { IUser, UserDoc, UserModelInterface } from "../template/IUser";
+
 const JwtPrivateKey = process.env.JwtPrivateKey;
 
-interface IUser extends Document {
-  givenName: string;
-  familyName: string;
-  name: string;
-  email: string;
-  imageUrl: string;
-  generateAuthToken(): string;
-}
-
-const userSchema = new mongoose.Schema<IUser>({
+const userSchema = new Schema<UserDoc>({
   givenName: { type: String, min: 5, max: 255, required: true },
   familyName: { type: String, min: 5, max: 255, required: true },
   name: { type: String, min: 5, max: 255, required: true },
@@ -30,7 +23,11 @@ userSchema.methods.generateAuthToken = function () {
   return token;
 };
 
-const User = mongoose.model<IUser>("user", userSchema);
+userSchema.methods.createDocument = (user: IUser) => {
+  return new User(user);
+};
+
+const User = mongoose.model<UserDoc, UserModelInterface>("user", userSchema);
 
 function validateUser(userObj: Object) {
   const schema = Joi.object({
@@ -43,7 +40,4 @@ function validateUser(userObj: Object) {
   return schema.validate(userObj);
 }
 
-export default {
-  User,
-  validate: validateUser,
-};
+export { User, validateUser as validate };

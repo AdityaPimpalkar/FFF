@@ -2,8 +2,6 @@ import { Request } from "express";
 import addressModel from "../models/address";
 const { Address, validate } = addressModel;
 
-const UserId = "603bb521117168406cdc713f";
-
 export function validateAddress(req: Request) {
   const addressObj = {
     addressLine1: req.body.addressLine1,
@@ -16,9 +14,9 @@ export function validateAddress(req: Request) {
   return validate(addressObj);
 }
 
-export async function getSelectedAddress() {
+async function getSelectedAddress(req: Request) {
   let filter = {
-    UserId: UserId,
+    UserId: req.body.user._id,
   };
   let query = { Addresses: { $elemMatch: { isdefault: true } } };
   let fields = {
@@ -29,33 +27,38 @@ export async function getSelectedAddress() {
   return result;
 }
 
-export async function getAddresses() {
-  try {
-    let path = "UserId";
-    let value = UserId;
-    let fields = { Addresses: 1 };
-    const results = await Address.findOne()
-      .where(path)
-      .equals(value)
-      .select(fields);
-    return results;
-  } catch (error) {
-    console.log(error);
+export async function getAddresses(req: Request) {
+  if (req.query.getSelectedAddress) {
+    const result = await getSelectedAddress(req);
+    return result;
+  } else {
+    try {
+      let path = "UserId";
+      let value = req.body.user._id;
+      let fields = { Addresses: 1 };
+      const results = await Address.findOne()
+        .where(path)
+        .equals(value)
+        .select(fields);
+      return results;
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
-async function updateDefaultAddress() {
-  let filter = { UserId: UserId, "Addresses.isdefault": true };
+async function updateDefaultAddress(req: Request) {
+  let filter = { UserId: req.body.user._id, "Addresses.isdefault": true };
   let query = { $set: { "Addresses.$.isdefault": false } };
   let options = { new: true };
   const result = await Address.findOneAndUpdate(filter, query, options).exec();
   return result;
 }
 
-export async function setDefaultAddress(id: string) {
-  let result = await updateDefaultAddress();
+export async function setDefaultAddress(req: Request) {
+  let result = await updateDefaultAddress(req);
   if (result != null) {
-    let filter = { "Addresses._id": id };
+    let filter = { "Addresses._id": req.params.id };
     let query = { $set: { "Addresses.$.isdefault": true } };
     let options = { new: true };
     result = await Address.findOneAndUpdate(filter, query, options).exec();
@@ -64,9 +67,9 @@ export async function setDefaultAddress(id: string) {
 }
 
 export async function addAddress(req: Request) {
-  let result = await updateDefaultAddress();
+  let result = await updateDefaultAddress(req);
   if (result != null) {
-    let filter = { UserId: UserId };
+    let filter = { UserId: req.body.user._id };
     let query = {
       $push: {
         Addresses: {
@@ -102,9 +105,9 @@ export async function updateAddress(req: Request) {
   return results;
 }
 
-export async function deleteAddress(id: string) {
-  let filter = { UserId: UserId };
-  let query = { $pull: { Addresses: { _id: id } } };
+export async function deleteAddress(req: Request) {
+  let filter = { UserId: req.body.user._id };
+  let query = { $pull: { Addresses: { _id: req.params.id } } };
   let options = { new: true };
   const results = await Address.findOneAndUpdate(filter, query, options).exec();
   return results;

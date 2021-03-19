@@ -1,28 +1,22 @@
 import express, { Request, Response } from "express";
+import auth from "../middleware/auth";
 const router = express.Router();
 import {
   validateAddress,
   getAddresses,
-  getSelectedAddress,
   updateAddress,
   addAddress,
   deleteAddress,
   setDefaultAddress,
 } from "../services/addresses";
 
-router.get("/", async (req: Request, res: Response) => {
-  if (req.query.getSelectedAddress) {
-    const address = await getSelectedAddress();
-    if (!address) return res.status(404).send("No selected address found");
-    res.send(address);
-  } else {
-    const addresses = await getAddresses();
-    if (!addresses) return res.status(404).send("No addresses found.");
-    res.send(addresses);
-  }
+router.get("/", auth, async (req: Request, res: Response) => {
+  const addresses = await getAddresses(req);
+  if (!addresses) return res.status(404).send("No addresses found.");
+  res.send(addresses);
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", auth, async (req: Request, res: Response) => {
   // validate request object
   const { error } = validateAddress(req);
   if (error) return res.status(404).send(error.details[0].message);
@@ -31,7 +25,7 @@ router.post("/", async (req: Request, res: Response) => {
   res.send(address);
 });
 
-router.put("/", async (req, res) => {
+router.put("/", auth, async (req: Request, res: Response) => {
   // validate request object
   const { error } = validateAddress(req);
   if (error) return res.status(404).send(error.details[0].message);
@@ -41,14 +35,14 @@ router.put("/", async (req, res) => {
   res.send(address);
 });
 
-router.put("/:id", async (req, res) => {
-  const address = await setDefaultAddress(req.params.id);
+router.put("/:id", auth, async (req: Request, res: Response) => {
+  const address = await setDefaultAddress(req);
   if (!address) return res.status(404).send("Could not update!");
   res.send(address);
 });
 
-router.delete("/:id", async (req, res) => {
-  const address = await deleteAddress(req.params.id);
+router.delete("/:id", auth, async (req: Request, res: Response) => {
+  const address = await deleteAddress(req);
   if (!address) return res.status(404).send("Could not remove!");
   res.send(address);
 });

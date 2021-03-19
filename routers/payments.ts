@@ -1,23 +1,22 @@
 import express, { Request, Response } from "express";
+import auth from "../middleware/auth";
 const router = express.Router();
 import paymentModel from "../models/payment";
 
 const { Payment, validate } = paymentModel;
 
-const UserId = "603bb521117168406cdc713f";
-
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", auth, async (req: Request, res: Response) => {
   //const Addresses = await Payment.findOne().where('UserId').equals(req.params.id);
   const Payments = await Payment.findOne()
     .where("UserId")
-    .equals(UserId)
+    .equals(req.body.user._id)
     .select({ Cards: 1, _id: 0 })
     .select("Cards.name Cards.number Cards.brand -_id");
 
   Payments ? res.send(Payments) : res.send({ Cards: [] });
 });
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", auth, async (req: Request, res: Response) => {
   const { error } = validate(req.body);
   if (error) res.status(400).send(error.details[0].message);
 
@@ -41,7 +40,7 @@ router.post("/", async (req: Request, res: Response) => {
     res.send(Payments);
   } else {
     const Payments = await Payment.findOneAndUpdate(
-      { UserId: UserId },
+      { UserId: req.body.user._id },
       {
         $push: { Cards: req.body },
       },
@@ -53,10 +52,10 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", auth, async (req: Request, res: Response) => {
   //const Payments = await Payment.findOneAndDelete({ 'Cards._id': req.body._id }).exec();
   const Payments = await Payment.findOneAndUpdate(
-    { UserId: UserId },
+    { UserId: req.body.user._id },
     { $pull: { Cards: { _id: req.params.id } } },
     { new: true }
   ).exec();

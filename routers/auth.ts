@@ -3,8 +3,7 @@ import auth from "../middleware/auth";
 
 const router = express.Router();
 
-import user from "../models/user";
-const { User, validate } = user;
+import { User, validate } from "../models/user";
 
 import address from "../models/address";
 const { Address } = address;
@@ -32,7 +31,15 @@ router.post("/", async (req: Request, res: Response) => {
     const token = user.generateAuthToken();
     return res.send(token);
   }
-  user = new User(req.body);
+
+  const { givenName, familyName, imageUrl, email, name } = req.body;
+  user = User.createDocument({
+    givenName,
+    familyName,
+    imageUrl,
+    email,
+    name,
+  });
   await user.save();
 
   await new Address({

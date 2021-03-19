@@ -5,8 +5,6 @@ import cartModel from "../models/cart";
 
 const { Cart, validate } = cartModel;
 
-const UserId = "603bb521117168406cdc713f";
-
 router.get("/", auth, async (req: Request, res: Response) => {
   //const carts = await Cart.findOne().where('UserId').equals(req.params.id);
 
