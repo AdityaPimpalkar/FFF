@@ -21,7 +21,7 @@ router.get("/", async (req: Request, res: Response) => {
   res.send(orders);
 });
 
-router.put("/", async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

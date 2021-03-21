@@ -33,7 +33,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   const { givenName, familyName, imageUrl, email, name } = req.body;
-  user = User.createDocument({
+  user = new User({
     givenName,
     familyName,
     imageUrl,

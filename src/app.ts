@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import "dotenv/config";
+import env from "dotenv";
+
+env.config({ path: "./.env" });
 
 import users from "../routers/users";
 import products from "../routers/products";
